@@ -15,13 +15,8 @@ module.exports = function (grunt) {
 
 	grunt.registerMultiTask('svn_fetch', 'Updates or checks out the desired files', function () {
 		var exec = require('child_process').exec;
-		var options = this.options({
-			bin:         'svn',
-			repository:  '',
-			path:        '',
-			execOptions: {},
-			svnOptions: {}
-		});
+		// Get the task options, with the config defaults
+		var options = this.options(grunt.config.get('svn_options'));
 		var done = this.async();
 		var map = this.data.map;
 		if (map != undefined) {
