@@ -13,7 +13,7 @@ module.exports = function (grunt) {
     // Please see the Grunt documentation for more information regarding task
     // creation: http://gruntjs.com/creating-tasks
 
-    grunt.registerTask('svn_config', 'Set the connexion vars', function () {
+    grunt.registerMultiTask('svn_config', 'Set the connexion vars', function () {
         var options = this.options({
             bin:         'svn',
             repository:  '',
@@ -21,6 +21,7 @@ module.exports = function (grunt) {
             execOptions: {},
             svnOptions: {}
         });
+
         grunt.config.set("svn_options", options);
     });
 };
