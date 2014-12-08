@@ -8,7 +8,12 @@
 
 'use strict';
 
+var nPath = require('path');
+var async = require('async');
+
 module.exports = function (grunt) {
+
+	grunt.loadNpmTasks('grunt-exec');
 
 	// Please see the Grunt documentation for more information regarding task
 	// creation: http://gruntjs.com/creating-tasks
@@ -17,48 +22,38 @@ module.exports = function (grunt) {
 		var exec = require('child_process').exec;
 		// Get the task options, with the config defaults
 		var options = this.options(grunt.config.get('svn_options'));
-		var done = this.async();
 		var map = this.data.map;
-		if (map != undefined) {
-			processMap();
-		} else {
-			grunt.log.error('\n\'map\' missing.');
-			done(true);
+		var fullCmd = "";
+		var done = this.async();
+
+		function getCmd(path) {
+			var command = options.bin;
+			var fullPath = nPath.join(options.path, path);
+			if (grunt.file.exists(fullPath + '/.svn')) {
+				command = [ command, 'update', fullPath ].join(' ');
+			} else {
+				command = [ command, 'checkout', options.repository + map[path], fullPath ].join(' ');
+			}
+			for (var key in options.svnOptions) {
+				command += ' --' + key + "='" + options.svnOptions[key] +"'";
+			}
+			return command;
 		}
 
-		function processMap() {
-			var paths = Object.keys(map);
-			getNextMapping();
-
-			function getNextMapping() {
-				if (paths.length > 0) {
-					processPath(paths.shift());
-				} else {
-					grunt.log.write('\n');
-					done(true);
-				}
-			}
-
-			function processPath(path) {
-				var command = options.bin;
-				var fullPath = options.path + path;
-				if (grunt.file.exists(fullPath + '/.svn')) {
-					command = [ command, 'update', fullPath ].join(' ');
-				} else {
-					command = [ command, 'checkout', options.repository + map[path], fullPath ].join(' ');
-				}
-				for (var key in options.svnOptions) {
-					command += ' --' + key + "='" + options.svnOptions[key] +"'"
-				}
-				grunt.log.write('Processing ' + fullPath + '\n');
-				exec(command, options.execOptions, function (error, stdout) {
-					grunt.log.write(stdout);
-					if (error !== null) {
-						grunt.log.error('\n#' + command + "\n" + error);
-					}
-					getNextMapping();
-				});
-			}
+		if (map !== undefined) {
+			Object.keys(map).forEach(function (item, index) {
+				fullCmd += getCmd(item);
+				fullCmd = Object.keys(map).length - 1 !== index ? fullCmd + " && " : fullCmd;
+			});
+			var execOptions = {
+				cmd: fullCmd,
+				callback: done
+			};
+			grunt.config("exec.svn", execOptions);
+			grunt.task.run("exec:svn");
+		} else {
+			grunt.log.error('\n\'map\' missing.');
+			done(false);
 		}
 	});
 };
