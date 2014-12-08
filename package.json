@@ -1,5 +1,5 @@
 {
-  "name": "grunt-svn-fetch",
+  "name": "grunt-svn-control",
   "description": "Little thing handy for checkouting, updating ang tagging with SVN",
   "version": "0.2.0",
   "homepage": "https://github.com/paulvarache/grunt-svn-control",
